@@ -22,5 +22,13 @@ export default function App() {
     );
   }
 
-  return <MainApp user={user} />;
+  return (
+    <MainApp
+      user={user}
+      onLogout={() => {
+        setUser(null);
+        setScreen("auth");
+      }}
+    />
+  );
 }

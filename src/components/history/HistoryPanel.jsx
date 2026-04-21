@@ -17,7 +17,7 @@ export default function HistoryPanel({ history, onClear }) {
               <div>
                 <strong>{item.from} → {item.to}</strong>
                 <div className="muted tiny">
-                  {item.date} · {item.transportType}
+                  {item.transportType}
                 </div>
               </div>
 

@@ -8,11 +8,19 @@ export default function LocationAutocompleteInput({
   placeholder,
 }) {
   const [suggestions, setSuggestions] = useState([]);
+  const [loading, setLoading] = useState(false);
 
   useEffect(() => {
     const timer = setTimeout(async () => {
+      if (!value?.trim()) {
+        setSuggestions([]);
+        return;
+      }
+
+      setLoading(true);
       const results = await searchPlaces(value);
       setSuggestions(results);
+      setLoading(false);
     }, 300);
 
     return () => clearTimeout(timer);
@@ -25,6 +33,9 @@ export default function LocationAutocompleteInput({
         value={value}
         onChange={(e) => setValue(e.target.value)}
         placeholder={placeholder}
+        onBlur={() => {
+          setTimeout(() => setSuggestions([]), 180);
+        }}
       />
 
       {suggestions.length > 0 && (
@@ -44,6 +55,8 @@ export default function LocationAutocompleteInput({
           ))}
         </div>
       )}
+
+      {loading && <p className="muted tiny" style={{ margin: "6px 2px 0" }}>Searching places...</p>}
     </div>
   );
 }

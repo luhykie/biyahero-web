@@ -24,6 +24,10 @@ export default function TransitPanel({ transit }) {
               <li key={route.id}>
                 <strong>{route.type} {route.code}</strong>
                 <span>{route.name}</span>
+                <span>
+                  Landmarks:{" "}
+                  {route.landmarks?.map((landmark) => landmark.name).join(" -> ")}
+                </span>
               </li>
             ))}
           </ul>

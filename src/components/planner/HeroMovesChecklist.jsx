@@ -1,6 +1,6 @@
 import heroMoves from "../../data/heroMoves";
 
-export default function HeroMovesChecklist({ selectedMoves, setSelectedMoves }) {
+export default function HeroMovesChecklist({ selectedMoves, setSelectedMoves, actionButton }) {
   const toggleMove = (id) => {
     setSelectedMoves((prev) =>
       prev.includes(id) ? prev.filter((x) => x !== id) : [...prev, id]
@@ -9,7 +9,7 @@ export default function HeroMovesChecklist({ selectedMoves, setSelectedMoves }) 
 
   return (
     <div style={{ marginTop: 18 }}>
-      <h3 className="section-title">Hero Moves & Discounts</h3>
+      <h3 className="section-title">Hero Moves</h3>
       <div className="hero-grid">
         {heroMoves.map((move) => (
           <label key={move.id} className="hero-item">
@@ -21,6 +21,7 @@ export default function HeroMovesChecklist({ selectedMoves, setSelectedMoves }) 
             <span>{move.label}</span>
           </label>
         ))}
+        {actionButton ? <div className="hero-item hero-action-slot">{actionButton}</div> : null}
       </div>
     </div>
   );

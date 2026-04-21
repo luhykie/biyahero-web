@@ -26,6 +26,7 @@ export function calculateSavings({
   if (selectedMoves.includes("avoid_peak")) betterTime -= 3;
 
   const hasDiscount =
+    selectedMoves.includes("fare_discount") ||
     selectedMoves.includes("student_discount") ||
     selectedMoves.includes("pwd_discount") ||
     selectedMoves.includes("senior_discount");
