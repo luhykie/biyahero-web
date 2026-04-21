@@ -1,0 +1,212 @@
+[
+  {
+    "code": "01K",
+    "name": "Urgello - Colon - Parkmall",
+    "path": ["Urgello", "Colon", "Mango Ave", "Parkmall"],
+    "type": "PUJ"
+  },
+  {
+    "code": "01C",
+    "name": "Urgello - Colon - SM",
+    "path": ["Urgello", "Colon", "SM City Cebu"],
+    "type": "PUJ"
+  },
+  {
+    "code": "01B",
+    "name": "Labangon - Colon - Carbon",
+    "path": ["Labangon", "Colon", "Carbon Market"],
+    "type": "PUJ"
+  },
+  {
+    "code": "02B",
+    "name": "South Bus Terminal - Colon - Pier",
+    "path": ["South Bus Terminal", "Colon", "Pier 1"],
+    "type": "PUJ"
+  },
+  {
+    "code": "02C",
+    "name": "Carbon - Pier - SM",
+    "path": ["Carbon", "Pier", "SM City Cebu"],
+    "type": "PUJ"
+  },
+  {
+    "code": "03A",
+    "name": "Mabolo - Colon - Carbon",
+    "path": ["Mabolo", "Colon", "Carbon Market"],
+    "type": "PUJ"
+  },
+  {
+    "code": "03B",
+    "name": "Mabolo - Colon - South Bus Terminal",
+    "path": ["Mabolo", "Colon", "South Bus Terminal"],
+    "type": "PUJ"
+  },
+  {
+    "code": "03Q",
+    "name": "Mabolo - Ayala - Colon",
+    "path": ["Mabolo", "Ayala Center Cebu", "Colon"],
+    "type": "PUJ"
+  },
+  {
+    "code": "04B",
+    "name": "Lahug - Ayala - Colon",
+    "path": ["Lahug", "Ayala Center Cebu", "Colon"],
+    "type": "PUJ"
+  },
+  {
+    "code": "04C",
+    "name": "Lahug - IT Park - Ayala - Colon",
+    "path": ["Lahug", "IT Park", "Ayala Center Cebu", "Colon"],
+    "type": "PUJ"
+  },
+  {
+    "code": "04H",
+    "name": "Busay - JY Square - Lahug - IT Park",
+    "path": ["Busay", "JY Square", "Lahug", "IT Park"],
+    "type": "PUJ"
+  },
+  {
+    "code": "06B",
+    "name": "Guadalupe - Colon",
+    "path": ["Guadalupe", "Colon"],
+    "type": "PUJ"
+  },
+  {
+    "code": "06C",
+    "name": "Guadalupe - Carbon",
+    "path": ["Guadalupe", "Carbon Market"],
+    "type": "PUJ"
+  },
+  {
+    "code": "07B",
+    "name": "Banawa - Colon",
+    "path": ["Banawa", "Colon"],
+    "type": "PUJ"
+  },
+  {
+    "code": "08G",
+    "name": "Talamban - Colon",
+    "path": ["Talamban", "Colon"],
+    "type": "PUJ"
+  },
+  {
+    "code": "08H",
+    "name": "Pit-os - Ayala - Colon",
+    "path": ["Pit-os", "Ayala Center Cebu", "Colon"],
+    "type": "PUJ"
+  },
+  {
+    "code": "09C",
+    "name": "Basak - Colon",
+    "path": ["Basak", "Colon"],
+    "type": "PUJ"
+  },
+  {
+    "code": "09G",
+    "name": "Basak - SM - Colon",
+    "path": ["Basak", "SM City Cebu", "Colon"],
+    "type": "PUJ"
+  },
+  {
+    "code": "10F",
+    "name": "Bulacao - Colon",
+    "path": ["Bulacao", "Colon"],
+    "type": "PUJ"
+  },
+  {
+    "code": "10H",
+    "name": "Bulacao - SM",
+    "path": ["Bulacao", "SM City Cebu"],
+    "type": "PUJ"
+  },
+  {
+    "code": "11A",
+    "name": "Inayawan - Colon",
+    "path": ["Inayawan", "Colon"],
+    "type": "PUJ"
+  },
+  {
+    "code": "12G",
+    "name": "Labangon - Ayala - SM",
+    "path": ["Labangon", "Ayala Center Cebu", "SM City Cebu"],
+    "type": "PUJ"
+  },
+  {
+    "code": "12I",
+    "name": "Labangon - Colon",
+    "path": ["Labangon", "Colon"],
+    "type": "PUJ"
+  },
+  {
+    "code": "13C",
+    "name": "Talamban - Ayala - Colon",
+    "path": ["Talamban", "Ayala Center Cebu", "Colon"],
+    "type": "PUJ"
+  },
+  {
+    "code": "14D",
+    "name": "Ayala - Colon",
+    "path": ["Ayala Center Cebu", "Colon"],
+    "type": "PUJ"
+  },
+  {
+    "code": "14G",
+    "name": "IT Park - Ayala - Colon",
+    "path": ["IT Park", "Ayala Center Cebu", "Colon"],
+    "type": "PUJ"
+  },
+  {
+    "code": "15",
+    "name": "OPRRA - Colon",
+    "path": ["OPRRA", "Colon"],
+    "type": "PUJ"
+  },
+  {
+    "code": "17B",
+    "name": "Apas - IT Park - SM - Colon",
+    "path": ["Apas", "IT Park", "SM City Cebu", "Colon"],
+    "type": "PUJ"
+  },
+  {
+    "code": "17C",
+    "name": "Apas - Ayala - Colon",
+    "path": ["Apas", "Ayala Center Cebu", "Colon"],
+    "type": "PUJ"
+  },
+  {
+    "code": "20A",
+    "name": "Mandaue - SM - Colon",
+    "path": ["Mandaue", "SM City Cebu", "Colon"],
+    "type": "PUJ"
+  },
+  {
+    "code": "21B",
+    "name": "Mandaue - Ayala",
+    "path": ["Mandaue", "Ayala Center Cebu"],
+    "type": "PUJ"
+  },
+  {
+    "code": "22I",
+    "name": "Mandaue - IT Park",
+    "path": ["Mandaue", "IT Park"],
+    "type": "PUJ"
+  },
+  {
+    "code": "23A",
+    "name": "Mactan - Marina Mall - SM - Cebu City",
+    "path": ["Mactan", "Marina Mall", "SM City Cebu", "Cebu City"],
+    "type": "PUJ"
+  },
+  {
+    "code": "23B",
+    "name": "Mactan - Marina Mall - SM - Cebu City",
+    "path": ["Mactan", "Marina Mall", "SM City Cebu", "Cebu City"],
+    "type": "PUJ"
+  },
+  {
+    "code": "23D",
+    "name": "Mactan - Marina Mall - SM - Cebu City",
+    "path": ["Mactan", "Marina Mall", "SM City Cebu", "Cebu City"],
+    "type": "PUJ"
+  }
+]

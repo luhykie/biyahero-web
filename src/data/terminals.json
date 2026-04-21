@@ -1,0 +1,82 @@
+[
+  {
+    "id": 1,
+    "name": "SM City Cebu MyBus Terminal",
+    "type": "MyBus",
+    "lat": 10.3110,
+    "lon": 123.9180,
+    "area": "SM City Cebu"
+  },
+  {
+    "id": 2,
+    "name": "Ayala Center Cebu PUJ Terminal",
+    "type": "PUJ",
+    "lat": 10.3181,
+    "lon": 123.9058,
+    "area": "Ayala Center Cebu"
+  },
+  {
+    "id": 3,
+    "name": "IT Park PUJ Loading Area",
+    "type": "PUJ",
+    "lat": 10.3296,
+    "lon": 123.9067,
+    "area": "IT Park"
+  },
+  {
+    "id": 4,
+    "name": "Fuente Osmeña PUJ Stop",
+    "type": "PUJ",
+    "lat": 10.3115,
+    "lon": 123.8915,
+    "area": "Fuente Osmeña"
+  },
+  {
+    "id": 5,
+    "name": "Colon PUJ Stop",
+    "type": "PUJ",
+    "lat": 10.2943,
+    "lon": 123.9023,
+    "area": "Colon"
+  },
+  {
+    "id": 6,
+    "name": "South Bus Terminal Area",
+    "type": "CeBus",
+    "lat": 10.2958,
+    "lon": 123.8984,
+    "area": "South Bus Terminal"
+  },
+  {
+    "id": 7,
+    "name": "Carbon PUJ Stop",
+    "type": "PUJ",
+    "lat": 10.2920,
+    "lon": 123.9048,
+    "area": "Carbon"
+  },
+  {
+    "id": 8,
+    "name": "Mabolo PUJ Stop",
+    "type": "PUJ",
+    "lat": 10.3167,
+    "lon": 123.9118,
+    "area": "Mabolo"
+  },
+  {
+    "id": 9,
+    "name": "Lahug PUJ Stop",
+    "type": "PUJ",
+    "lat": 10.3312,
+    "lon": 123.8931,
+    "area": "Lahug"
+  },
+  {
+    "id": 10,
+    "name": "JY Square Loading Area",
+    "type": "PUJ",
+    "lat": 10.3363,
+    "lon": 123.8948,
+    "area": "JY Square"
+  }
+]
