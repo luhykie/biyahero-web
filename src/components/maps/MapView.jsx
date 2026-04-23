@@ -73,11 +73,11 @@ export default function MapView({
         {pujRoutePolylines.map((line, index) => (
           <Polyline
             key={`puj-line-${index}`}
-            positions={line}
-            color="#00a86b"
-            weight={3}
-            opacity={0.65}
-            dashArray="8, 8"
+            positions={line.positions}
+            color={line.color || "#16a34a"}
+            weight={line.weight || 4}
+            opacity={line.opacity || 0.85}
+            dashArray={line.dashArray || undefined}
           />
         ))}
 

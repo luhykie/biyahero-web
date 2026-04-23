@@ -5,12 +5,16 @@ import HeroMovesChecklist from "../components/planner/HeroMovesChecklist";
 import TransitPanel from "../components/planner/TransitPanel";
 import RouteSummaryCard from "../components/dashboard/RouteSummaryCard";
 import SavingsDashboard from "../components/dashboard/SavingsDashboard";
-import HistoryPanel from "../components/history/HistoryPanel";
+import TripHistoryPage from "../components/history/TripHistoryPage";
 import { getRoute } from "../services/routingApi";
 import { calculateSavings } from "../utils/calculations";
 import { getStressLevel } from "../utils/stressLogic";
 import { getTransitRecommendation } from "../utils/transitLogic";
-import { getHistory, saveHistoryItem, clearHistory } from "../utils/historyStorage";
+import {
+  getHistory,
+  saveHistoryItem,
+  clearHistory,
+} from "../utils/historyStorage";
 import landmarks from "../data/landmarks.json";
 
 function countWeekdayInMonth(year, monthIndex, weekday) {
@@ -45,7 +49,9 @@ export default function MainApp({ user, onLogout }) {
   const [origin, setOrigin] = useState(null);
   const [destination, setDestination] = useState(null);
 
-  const [calendarMonth, setCalendarMonth] = useState(() => new Date().toISOString().slice(0, 7));
+  const [calendarMonth, setCalendarMonth] = useState(() =>
+    new Date().toISOString().slice(0, 7)
+  );
   const [selectedCommuteDays, setSelectedCommuteDays] = useState([1, 2, 3, 4, 5]);
   const [tripsPerDay, setTripsPerDay] = useState(2);
   const [budgetAmount, setBudgetAmount] = useState("");
@@ -57,20 +63,27 @@ export default function MainApp({ user, onLogout }) {
   const [currentStress, setCurrentStress] = useState(null);
   const [betterStress, setBetterStress] = useState(null);
   const [transit, setTransit] = useState(null);
+  const [selectedRouteTab, setSelectedRouteTab] = useState("budget");
   const [loading, setLoading] = useState(false);
   const [history, setHistory] = useState(getHistory());
   const [activeView, setActiveView] = useState("planner");
+
   const budgetPeriod = "monthly";
+
   const commuteCounts = useMemo(
     () => getCommuteCounts(selectedCommuteDays, calendarMonth),
     [selectedCommuteDays, calendarMonth]
   );
+
   const computedTripCountByPeriod = {
     daily: commuteCounts.daily * tripsPerDay,
     weekly: commuteCounts.weekly * tripsPerDay,
     monthly: commuteCounts.monthly * tripsPerDay,
   };
+
   const effectiveTripCount = computedTripCountByPeriod[budgetPeriod] || 0;
+  const monthlyBudgetTarget =
+    (Number(budgetAmount) || 0) * (commuteCounts.monthly || 0);
 
   const tripsThisMonth = useMemo(
     () =>
@@ -94,6 +107,38 @@ export default function MainApp({ user, onLogout }) {
     () => history.reduce((sum, item) => sum + (item.perTripSaved || 0), 0),
     [history]
   );
+
+  const handleToggleCommuteDay = (weekday) => {
+    setSelectedCommuteDays((current) => {
+      if (current.includes(weekday)) {
+        return current.filter((day) => day !== weekday);
+      }
+      return [...current, weekday].sort((a, b) => a - b);
+    });
+  };
+
+  const handleUseAgain = (item) => {
+    setOriginText(item.from || "");
+    setDestinationText(item.to || "");
+    setOrigin(item.origin || null);
+    setDestination(item.destination || null);
+
+    setBudgetAmount(item.budgetAmount ? String(item.budgetAmount) : "");
+    setSelectedMoves(item.selectedMoves || []);
+    setCalendarMonth(item.calendarMonth || new Date().toISOString().slice(0, 7));
+    setSelectedCommuteDays(item.selectedCommuteDays || [1, 2, 3, 4, 5]);
+    setTripsPerDay(item.tripsPerDay || 2);
+
+    setRoute(null);
+    setRouteInfo(null);
+    setSavings(null);
+    setCurrentStress(null);
+    setBetterStress(null);
+    setTransit(null);
+    setSelectedRouteTab("budget");
+
+    setActiveView("planner");
+  };
 
   const generateRoute = async () => {
     if (!origin || !destination || !budgetAmount || !calendarMonth) {
@@ -120,6 +165,7 @@ export default function MainApp({ user, onLogout }) {
         budgetAmount,
         tripCount: effectiveTripCount,
         selectedMoves,
+        commuteDayCount: commuteCounts.monthly,
       });
 
       setSavings(computedSavings);
@@ -141,9 +187,14 @@ export default function MainApp({ user, onLogout }) {
       const transitData = getTransitRecommendation(
         originText,
         destinationText,
-        selectedMoves
+        selectedMoves,
+        origin,
+        destination,
+        tripsPerDay
       );
+
       setTransit(transitData);
+      setSelectedRouteTab(transitData.availableTabs?.[0] || "budget");
       setActiveView("results");
 
       const historyItem = {
@@ -151,10 +202,16 @@ export default function MainApp({ user, onLogout }) {
         date: new Date().toISOString().slice(0, 10),
         from: originText,
         to: destinationText,
+        origin,
+        destination,
         budgetPeriod,
         budgetAmount: Number(budgetAmount),
         tripCount: effectiveTripCount,
         commuteTrips: effectiveTripCount,
+        calendarMonth,
+        selectedCommuteDays,
+        tripsPerDay,
+        selectedMoves,
         estimatedSpent: computedSavings.projectedSpend,
         actualSpent: computedSavings.betterCost,
         perTripSaved: computedSavings.perTrip,
@@ -170,15 +227,6 @@ export default function MainApp({ user, onLogout }) {
     } finally {
       setLoading(false);
     }
-  };
-
-  const handleToggleCommuteDay = (weekday) => {
-    setSelectedCommuteDays((current) => {
-      if (current.includes(weekday)) {
-        return current.filter((day) => day !== weekday);
-      }
-      return [...current, weekday].sort((a, b) => a - b);
-    });
   };
 
   return (
@@ -232,7 +280,9 @@ export default function MainApp({ user, onLogout }) {
               <button
                 key={option.value}
                 type="button"
-                className={`weekday-chip sidebar-chip ${selectedCommuteDays.includes(option.value) ? "active" : ""}`}
+                className={`weekday-chip sidebar-chip ${
+                  selectedCommuteDays.includes(option.value) ? "active" : ""
+                }`}
                 onClick={() => handleToggleCommuteDay(option.value)}
               >
                 {option.label}
@@ -282,10 +332,22 @@ export default function MainApp({ user, onLogout }) {
             </div>
             <div className="legend-row">
               <span className="legend-line green" />
-              <span>Suggested PUJ path</span>
+              <span>Budget-friendly PUJ route</span>
+            </div>
+            <div className="legend-row">
+              <span className="legend-line dashed-purple" />
+              <span>Alternative PUJ route</span>
             </div>
           </div>
         </div>
+
+        <button
+          className="ghost-btn full-width"
+          type="button"
+          onClick={() => setActiveView("history")}
+        >
+          Trip History
+        </button>
 
         <div className="sidebar-footer">
           <button className="ghost-btn full-width" onClick={onLogout} type="button">
@@ -302,15 +364,22 @@ export default function MainApp({ user, onLogout }) {
         <header className="top-header glossy-card">
           <div>
             <h1 className="header-title">
-              {activeView === "planner" ? "Set your transportation budget" : "Trip Results"}
+              {activeView === "planner"
+                ? "Set your transportation budget"
+                : activeView === "results"
+                ? "Trip Results"
+                : "Trip History"}
             </h1>
             <p className="header-subtitle">
               {activeView === "planner"
                 ? "Set your commute details then track your savings."
-                : "Review your route, map, and recommended PUJ paths."}
+                : activeView === "results"
+                ? "Review your route, map, and recommended PUJ paths."
+                : "View your saved trips and use them again."}
             </p>
           </div>
-          {activeView === "results" ? (
+
+          {activeView !== "planner" ? (
             <button
               className="ghost-btn"
               type="button"
@@ -324,7 +393,7 @@ export default function MainApp({ user, onLogout }) {
         <SavingsDashboard
           history={history}
           savings={savings}
-          budgetAmount={budgetAmount}
+          budgetAmount={monthlyBudgetTarget}
           budgetPeriod={budgetPeriod}
           tripCount={effectiveTripCount}
           totalMoneySaved={totalMoneySaved}
@@ -334,78 +403,80 @@ export default function MainApp({ user, onLogout }) {
 
         {activeView === "planner" ? (
           <section className="planner-grid">
-          <div className="left-column">
-            <div className="card glossy-card">
-              <h2 className="section-title">Savings Form</h2>
+            <div className="left-column">
+              <div className="card glossy-card">
+                <h2 className="section-title">Savings Form</h2>
 
-              <div className="grid-2">
-                <LocationAutocompleteInput
-                  value={originText}
-                  setValue={setOriginText}
-                  onSelect={setOrigin}
-                  placeholder="Current Location"
-                />
+                <div className="grid-2">
+                  <LocationAutocompleteInput
+                    value={originText}
+                    setValue={setOriginText}
+                    onSelect={setOrigin}
+                    placeholder="Current Location"
+                  />
 
-                <LocationAutocompleteInput
-                  value={destinationText}
-                  setValue={setDestinationText}
-                  onSelect={setDestination}
-                  placeholder="Destination"
-                />
-              </div>
-
-              <div className="grid-2" style={{ marginTop: 14 }}>
-                <div>
-                  <label className="field-label">Monthly Budget</label>
-                  <input
-                    className="input"
-                    type="number"
-                    placeholder="e.g. 500"
-                    value={budgetAmount}
-                    onChange={(e) => setBudgetAmount(e.target.value)}
+                  <LocationAutocompleteInput
+                    value={destinationText}
+                    setValue={setDestinationText}
+                    onSelect={setDestination}
+                    placeholder="Destination"
                   />
                 </div>
 
-                <div>
-                  <label className="field-label">Trips (auto from Calendar)</label>
-                  <input
-                    className="input"
-                    type="text"
-                    value={effectiveTripCount}
-                    readOnly
-                  />
-                </div>
-              </div>
+                <div className="grid-2" style={{ marginTop: 14 }}>
+                  <div>
+                    <label className="field-label">Daily Budget</label>
+                    <input
+                      className="input"
+                      type="number"
+                      placeholder="e.g. 150"
+                      value={budgetAmount}
+                      onChange={(e) => setBudgetAmount(e.target.value)}
+                    />
+                  </div>
 
-              <HeroMovesChecklist
+                  <div>
+                    <label className="field-label">Trips (auto from Calendar)</label>
+                    <input
+                      className="input"
+                      type="text"
+                      value={effectiveTripCount}
+                      readOnly
+                    />
+                  </div>
+                </div>
+
+                <HeroMovesChecklist
+                  selectedMoves={selectedMoves}
+                  setSelectedMoves={setSelectedMoves}
+                  actionButton={
+                    <button
+                      className="button-primary full-width"
+                      onClick={generateRoute}
+                      disabled={loading}
+                      type="button"
+                    >
+                      {loading ? "Calculating..." : "Track Savings"}
+                    </button>
+                  }
+                />
+              </div>
+            </div>
+
+            <div className="right-column">
+              <TransitPanel
+                transit={transit}
+                selectedRouteTab={selectedRouteTab}
+                onSelectRouteTab={setSelectedRouteTab}
+                originText={originText}
+                destinationText={destinationText}
+                budgetAmount={budgetAmount}
+                tripCount={effectiveTripCount}
                 selectedMoves={selectedMoves}
-                setSelectedMoves={setSelectedMoves}
-                actionButton={
-                  <button
-                    className="button-primary full-width"
-                    onClick={generateRoute}
-                    disabled={loading}
-                    type="button"
-                  >
-                    {loading ? "Calculating..." : "Track Savings"}
-                  </button>
-                }
               />
             </div>
-          </div>
-
-          <div className="right-column">
-            <TransitPanel transit={transit} />
-            <HistoryPanel
-              history={history}
-              onClear={() => {
-                clearHistory();
-                setHistory([]);
-              }}
-            />
-          </div>
           </section>
-        ) : (
+        ) : activeView === "results" ? (
           <section className="planner-grid">
             <div className="left-column">
               <RouteSummaryCard
@@ -418,22 +489,35 @@ export default function MainApp({ user, onLogout }) {
                 origin={origin}
                 destination={destination}
                 route={route}
-                terminals={transit?.terminals || []}
-                landmarks={transit?.landmarks || landmarks}
-                pujRoutePolylines={transit?.pujRoutePolylines || []}
+                terminals={transit?.routeOptions?.[selectedRouteTab]?.terminals || []}
+                landmarks={transit?.routeOptions?.[selectedRouteTab]?.landmarks || landmarks}
+                pujRoutePolylines={transit?.routeOptions?.[selectedRouteTab]?.pujRoutePolylines || []}
               />
             </div>
+
             <div className="right-column">
-              <TransitPanel transit={transit} />
-              <HistoryPanel
-                history={history}
-                onClear={() => {
-                  clearHistory();
-                  setHistory([]);
-                }}
+              <TransitPanel
+                transit={transit}
+                selectedRouteTab={selectedRouteTab}
+                onSelectRouteTab={setSelectedRouteTab}
+                originText={originText}
+                destinationText={destinationText}
+                budgetAmount={budgetAmount}
+                tripCount={effectiveTripCount}
+                selectedMoves={selectedMoves}
               />
             </div>
           </section>
+        ) : (
+          <TripHistoryPage
+            history={history}
+            onBack={() => setActiveView("planner")}
+            onClear={() => {
+              clearHistory();
+              setHistory([]);
+            }}
+            onUseAgain={handleUseAgain}
+          />
         )}
       </main>
     </div>

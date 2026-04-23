@@ -384,6 +384,17 @@ input {
   background: #0ea56f;
 }
 
+.legend-line.dashed-purple {
+  background: #7c3aed;
+  background-image: linear-gradient(
+    to right,
+    #7c3aed 55%,
+    rgba(124, 58, 237, 0.08) 55%
+  );
+  background-size: 12px 100%;
+  box-shadow: 0 0 0 1px rgba(255, 255, 255, 0.35) inset;
+}
+
 .user-mini {
   background: rgba(255,255,255,0.12);
   padding: 12px;
