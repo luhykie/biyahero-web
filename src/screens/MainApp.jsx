@@ -5,6 +5,8 @@ import TransitPanel from "../components/planner/TransitPanel";
 import RouteSummaryCard from "../components/dashboard/RouteSummaryCard";
 import SavingsDashboard from "../components/dashboard/SavingsDashboard";
 import TripHistoryPage from "../components/history/TripHistoryPage";
+import { BellIcon, MenuIcon, UserIcon } from "../components/ui/AppIcons";
+import MobileMoreMenu from "../components/ui/MobileMoreMenu";
 import { getRoute } from "../services/routingApi";
 import { calculateSavings } from "../utils/calculations";
 import { getStressLevel } from "../utils/stressLogic";
@@ -26,9 +28,15 @@ const NAV_ITEMS = [
 
 const MOBILE_NAV_ITEMS = [
   { id: "planner", label: "Home", icon: "/assets/icons/maps.svg" },
-  { id: "tripPlanner", label: "Planner", icon: "/assets/icons/commute-setup.svg" },
-  { id: "travelPlan", label: "Plan", icon: "/assets/icons/travel-plan.svg" },
   { id: "results", label: "Map", icon: "/assets/icons/map-legend.svg" },
+  { id: "history", label: "History", icon: "/assets/icons/trip-history.svg" },
+];
+
+const MOBILE_MORE_ITEMS = [
+  { id: "favorites", label: "Saved", icon: "/assets/icons/heart.svg" },
+  { id: "destinations", label: "Destinations", icon: "/assets/icons/destinations.svg" },
+  { id: "guide", label: "Guide", icon: "/assets/icons/point-of-interest.svg" },
+  { id: "settings", label: "Profile", icon: "/assets/icons/commute-setup.svg" },
 ];
 
 const ACTIVE_VIEW_KEY = "biyahero_active_view";
@@ -185,51 +193,6 @@ const WEATHER = {
   humidity: 72,
 };
 
-function BellIcon() {
-  return (
-    <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false">
-      <path
-        d="M18 8.5a6 6 0 0 0-12 0c0 7-3 7-3 9h18c0-2-3-2-3-9"
-        fill="none"
-        stroke="currentColor"
-        strokeLinecap="round"
-        strokeLinejoin="round"
-        strokeWidth="2"
-      />
-      <path
-        d="M10 21h4"
-        fill="none"
-        stroke="currentColor"
-        strokeLinecap="round"
-        strokeWidth="2"
-      />
-    </svg>
-  );
-}
-
-function UserIcon() {
-  return (
-    <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false">
-      <path
-        d="M20 21a8 8 0 0 0-16 0"
-        fill="none"
-        stroke="currentColor"
-        strokeLinecap="round"
-        strokeLinejoin="round"
-        strokeWidth="2"
-      />
-      <circle
-        cx="12"
-        cy="8"
-        r="4"
-        fill="none"
-        stroke="currentColor"
-        strokeWidth="2"
-      />
-    </svg>
-  );
-}
-
 function getStoredActiveView() {
   try {
     return localStorage.getItem(ACTIVE_VIEW_KEY) || "planner";
@@ -296,6 +259,7 @@ export default function MainApp({ user, onLogout }) {
   const [selectedDestinationCard, setSelectedDestinationCard] = useState(DESTINATIONS[0]);
   const [favoriteDestinations, setFavoriteDestinations] = useState([]);
   const [currentNow, setCurrentNow] = useState(() => new Date());
+  const [showMobileMore, setShowMobileMore] = useState(false);
 
   const budgetPeriod = "daily";
 
@@ -764,6 +728,12 @@ export default function MainApp({ user, onLogout }) {
             <p className="header-subtitle">
               Plan your trip, track your budget, and explore all of Cebu.
             </p>
+            <div className="mobile-header-meta">
+              <span>{heatIndex}C heat index</span>
+              <span>{formatHeaderDate(currentNow)}</span>
+              <span>{formatHeaderTime(currentNow)}</span>
+              <span>Cebu City</span>
+            </div>
           </div>
 
           <div className="header-weather">
@@ -946,7 +916,28 @@ export default function MainApp({ user, onLogout }) {
             {item.label.replace("Map & Routes", "Map")}
           </button>
         ))}
+        <button
+          type="button"
+          className={showMobileMore ? "active" : ""}
+          onClick={() => setShowMobileMore((current) => !current)}
+        >
+          <span>
+            <MenuIcon />
+          </span>
+          More
+        </button>
       </nav>
+
+      {showMobileMore ? (
+        <MobileMoreMenu
+          activeView={activeView}
+          items={MOBILE_MORE_ITEMS}
+          onClose={() => setShowMobileMore(false)}
+          onLogout={onLogout}
+          onSelectView={setActiveView}
+          profileName={profileName}
+        />
+      ) : null}
     </div>
   );
 }
