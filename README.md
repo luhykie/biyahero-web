@@ -1,16 +1,66 @@
-# React + Vite
+# BiyaHero Web
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+A React + Vite travel planning prototype for commuters and visitors in Cebu.
 
-Currently, two official plugins are available:
+## What it does
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Oxc](https://oxc.rs)
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/)
+BiyaHero helps first-time travelers plan smarter routes using public transport, terminals, landmarks, and estimated commute details.
 
-## React Compiler
+Core features:
 
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
+- Responsive route planning and commute recommendations.
+- Budget-aware ride suggestions.
+- Place discovery for Cebu landmarks, malls, beaches, and transit terminals.
+- Simple onboarding flow with welcome, auth, and main app screens.
 
-## Expanding the ESLint configuration
+## Tech stack
 
-If you are developing a production application, we recommend using TypeScript with type-aware lint rules enabled. Check out the [TS template](https://github.com/vitejs/vite/tree/main/packages/create-vite/template-react-ts) for information on how to integrate TypeScript and [`typescript-eslint`](https://typescript-eslint.io) in your project.
+- React 19
+- Vite
+- Leaflet + React Leaflet for map display
+- ESLint for code quality
+
+## Getting started
+
+Install dependencies:
+
+```bash
+npm install
+```
+
+Start the development server:
+
+```bash
+npm run dev
+```
+
+Build for production:
+
+```bash
+npm run build
+```
+
+Preview the production build locally:
+
+```bash
+npm run preview
+```
+
+Run linting:
+
+```bash
+npm run lint
+```
+
+## Project structure
+
+- `src/` - application source files
+- `src/components/` - reusable UI components and screens
+- `src/data/` - terminals, transit routes, landmarks, and hero moves content
+- `src/services/` - location and routing helpers
+- `src/utils/` - app logic, calculations, and history storage
+- `public/` - static assets used by the app
+
+## Notes
+
+This repository is currently configured as a private Vite app and does not include backend authentication or real API integration. It is intended as a front-end prototype for Cebu commute planning.

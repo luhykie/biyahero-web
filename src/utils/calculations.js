@@ -28,7 +28,7 @@ export function calculateSavings({
   selectedMoves,
 }) {
   const totalTripsForMonth = Number(tripCount) || 1;
-  const dailyBudget = Number(budgetAmount) || 0;
+  const dailyBudget = Math.max(0, Number(budgetAmount) || 0);
   const commuteDays = Number(commuteDayCount) || 1;
   const ridesPerDay = Number(tripsPerDay) || 1;
 
@@ -58,8 +58,8 @@ export function calculateSavings({
   const betterCostPerDay = round2(betterFarePerRide * ridesPerDay);
 
   const projectedSpend = round2(betterFarePerRide * totalTripsForMonth);
-  const monthlyBudgetTarget = round2(dailyBudget * commuteDays);
-  const budgetLeft = round2(monthlyBudgetTarget - projectedSpend);
+  const budgetTarget = round2(dailyBudget * commuteDays);
+  const budgetLeft = round2(Math.max(0, budgetTarget - projectedSpend));
 
   const perTrip = round2(Math.max(0, currentCostPerRide - betterFarePerRide));
   const perDay = round2(Math.max(0, currentCostPerDay - betterCostPerDay));
@@ -78,7 +78,7 @@ export function calculateSavings({
     perMonth,
     timeSaved,
     projectedSpend,
-    budget: monthlyBudgetTarget,
+    budget: budgetTarget,
     dailyBudget,
     commuteDays,
     budgetLeft,

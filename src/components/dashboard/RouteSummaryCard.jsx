@@ -3,12 +3,26 @@ export default function RouteSummaryCard({
   savings,
   currentStress,
   betterStress,
+  transit,
+  selectedRouteTab,
 }) {
   if (!routeInfo || !savings) return null;
 
+  const activeOption =
+    selectedRouteTab && transit?.routeOptions?.[selectedRouteTab]
+      ? transit.routeOptions[selectedRouteTab]
+      : transit?.primaryRoute;
+  const travelTime = activeOption?.estimatedDuration || routeInfo.durationMin;
+  const estimatedFare = activeOption?.estimatedCostPerDay || savings.betterCost;
+  const eta = new Intl.DateTimeFormat("en-PH", {
+    hour: "numeric",
+    minute: "2-digit",
+  }).format(new Date(Date.now() + travelTime * 60000));
+
   return (
-    <div className="card glossy-card" style={{ marginTop: 18 }}>
-      <h3 className="section-title">Route Summary</h3>
+    <div className="card panel-card route-summary-card">
+      <div className="panel-kicker">Route Summary</div>
+      <h3 className="section-title">Recommended route details</h3>
 
       <div className="summary-grid">
         <div className="summary-block">
@@ -17,18 +31,23 @@ export default function RouteSummaryCard({
         </div>
 
         <div className="summary-block">
-          <span>Estimated Duration</span>
-          <strong>{routeInfo.durationMin} mins</strong>
+          <span>Travel Time</span>
+          <strong>{travelTime} mins</strong>
         </div>
 
         <div className="summary-block">
-          <span>Current Cost</span>
-          <strong>₱{savings.currentCost}</strong>
+          <span>ETA</span>
+          <strong>{eta}</strong>
         </div>
 
         <div className="summary-block">
-          <span>Better Cost</span>
-          <strong>₱{savings.betterCost}</strong>
+          <span>Estimated Fare</span>
+          <strong>PHP {estimatedFare}</strong>
+        </div>
+
+        <div className="summary-block">
+          <span>Budget Left</span>
+          <strong>PHP {savings.budgetLeft}</strong>
         </div>
 
         <div className="summary-block">

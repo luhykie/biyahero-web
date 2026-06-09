@@ -1,4 +1,5 @@
-import { MapContainer, TileLayer, Marker, Polyline, Popup } from "react-leaflet";
+import { MapContainer, TileLayer, Marker, Polyline, Popup, useMap } from "react-leaflet";
+import { useEffect } from "react";
 import L from "leaflet";
 
 const originIcon = L.divIcon({
@@ -33,6 +34,22 @@ const landmarkIcon = L.divIcon({
   popupAnchor: [0, -20],
 });
 
+function MapBounds({ points }) {
+  const map = useMap();
+
+  useEffect(() => {
+    const validPoints = points.filter(
+      ([lat, lon]) => Number.isFinite(lat) && Number.isFinite(lon)
+    );
+
+    if (validPoints.length < 2) return;
+
+    map.fitBounds(validPoints, { padding: [28, 28] });
+  }, [map, points]);
+
+  return null;
+}
+
 export default function MapView({
   origin,
   destination,
@@ -42,6 +59,14 @@ export default function MapView({
   pujRoutePolylines = [],
 }) {
   const center = origin ? [origin.lat, origin.lon] : [10.3157, 123.8854];
+  const mapPoints = [
+    ...(origin ? [[origin.lat, origin.lon]] : []),
+    ...(destination ? [[destination.lat, destination.lon]] : []),
+    ...(route || []),
+    ...pujRoutePolylines.flatMap((line) => line.positions || []),
+    ...terminals.map((terminal) => [terminal.lat, terminal.lon]),
+    ...landmarks.map((landmark) => [landmark.lat, landmark.lon]),
+  ];
 
   return (
     <div className="card glossy-card" style={{ marginTop: 18, padding: 10 }}>
@@ -55,6 +80,7 @@ export default function MapView({
           attribution="&copy; OpenStreetMap contributors"
           url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
         />
+        <MapBounds points={mapPoints} />
 
         {origin && (
           <Marker position={[origin.lat, origin.lon]} icon={originIcon}>
@@ -102,6 +128,18 @@ export default function MapView({
               </Popup>
             </Marker>
           ))}
+
+        <div className="map-legend-overlay">
+          <strong>Map Legend</strong>
+          <span><i className="legend-line blue" /> Jeepney Route</span>
+          <span><i className="legend-line green" /> Bus Route</span>
+          <span><i className="legend-line dashed-purple" /> Transfer / Alternate</span>
+          <span><i className="legend-marker legend-origin">O</i> Origin</span>
+          <span><i className="legend-marker legend-destination">D</i> Destination</span>
+          <span><i className="legend-marker legend-terminal">T</i> Terminal</span>
+          <span><i className="legend-marker legend-waiting">W</i> Waiting Shed</span>
+          <span><i className="legend-marker legend-landmark">L</i> Landmark / Stop</span>
+        </div>
       </MapContainer>
     </div>
   );

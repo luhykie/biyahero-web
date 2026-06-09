@@ -40,8 +40,7 @@ export default function CommuteCalendarCard({
 
         <div className="calendar-counts">
           <div><strong>Daily:</strong> {commuteCounts.daily * tripsPerDay}</div>
-          <div><strong>Weekly:</strong> {commuteCounts.weekly * tripsPerDay}</div>
-          <div><strong>Monthly:</strong> {commuteCounts.monthly * tripsPerDay}</div>
+          <div><strong>Today:</strong> {commuteCounts.daily * tripsPerDay}</div>
         </div>
       </div>
 

@@ -2,52 +2,44 @@ export default function SavingsDashboard({
   history,
   savings,
   budgetAmount,
-  budgetPeriod,
   tripCount,
   totalMoneySaved,
   tripsThisMonth,
   daysWithTrips,
 }) {
-  const budget = Number(budgetAmount) || 0;
-  const projectedSpend = savings?.projectedSpend || 0;
-  const budgetDiff = budget - projectedSpend;
+  const budget = Math.max(0, Number(budgetAmount) || 0);
+  const projectedSpend = Math.max(0, savings?.projectedSpend || 0);
+  const budgetDiff = budget ? Math.max(budget - projectedSpend, 0) : 0;
+  const savedTrips = history?.length || 0;
 
   return (
     <section className="stats-row">
-      <div className="stat-card blue glossy-card">
-        <span>Total Spent Target</span>
-        <strong>₱{budget || 0}</strong>
-        <small>This {budgetPeriod}</small>
+      <div className="stat-card orange">
+        <i><img src="/assets/icons/daily-budget.svg" alt="" /></i>
+        <span>Daily Budget</span>
+        <strong>PHP {budget || 0}</strong>
+        <small>Set for today</small>
       </div>
 
-      <div className="stat-card peach glossy-card">
-        <span>Money Saved</span>
-        <strong>₱{savings?.perTrip || 0}</strong>
-        <small>Per ride</small>
+      <div className="stat-card blue">
+        <i><img src="/assets/icons/route-summary.svg" alt="" /></i>
+        <span>Estimated Cost</span>
+        <strong>PHP {projectedSpend}</strong>
+        <small>For current trip</small>
       </div>
 
-      <div className="stat-card yellow glossy-card">
-        <span>Trips Tracked</span>
-        <strong>{tripCount || 0}</strong>
-        <small>This {budgetPeriod}</small>
-      </div>
-
-      <div className="stat-card lilac glossy-card">
+      <div className="stat-card green">
+        <i><img src="/assets/icons/daily-budget.svg" alt="" /></i>
         <span>Budget Left</span>
-        <strong>₱{budgetDiff}</strong>
-        <small>{budget > 0 ? `₱${projectedSpend} used` : "Set budget"}</small>
+        <strong>PHP {budgetDiff}</strong>
+        <small>Remaining today</small>
       </div>
 
-      <div className="stat-card white glossy-card">
-        <span>Total Saved</span>
-        <strong>₱{totalMoneySaved}</strong>
-        <small>All saved rides</small>
-      </div>
-
-      <div className="stat-card white glossy-card">
-        <span>Trips This Month</span>
-        <strong>{tripsThisMonth}</strong>
-        <small>{daysWithTrips} days with trips</small>
+      <div className="stat-card coral">
+        <i><img src="/assets/icons/trip-history.svg" alt="" /></i>
+        <span>Trips Saved</span>
+        <strong>{savedTrips}</strong>
+        <small>Stored routes</small>
       </div>
     </section>
   );

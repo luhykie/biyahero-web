@@ -5,16 +5,19 @@ export default function TripHistoryPage({
   onUseAgain,
 }) {
   return (
-    <section className="card glossy-card" style={{ marginTop: 18 }}>
+    <section className="card panel-card history-page">
       <div className="panel-head">
-        <h2 className="section-title">Trip History</h2>
+        <div>
+          <div className="panel-kicker">Trip History</div>
+          <h2 className="section-title">Review saved trips and plans</h2>
+        </div>
 
-        <div style={{ display: "flex", gap: 8 }}>
+        <div className="panel-actions">
           <button className="ghost-btn" type="button" onClick={onBack}>
             Back
           </button>
-          <button className="ghost-btn" type="button" onClick={onClear}>
-            Clear
+          <button className="ghost-btn danger" type="button" onClick={onClear}>
+            Clear History
           </button>
         </div>
       </div>
@@ -22,36 +25,35 @@ export default function TripHistoryPage({
       {history.length === 0 ? (
         <p className="muted">No trips saved yet.</p>
       ) : (
-        <div className="history-list">
+        <div className="history-table">
+          <div className="history-row history-head">
+            <span>Destination</span>
+            <span>Date</span>
+            <span>Fare</span>
+            <span>Trips</span>
+            <span>Transport</span>
+            <span>Action</span>
+          </div>
+
           {history.map((item) => (
-            <div key={item.id} className="history-item">
-              <div>
-                <strong>
-                  {item.from} → {item.to}
-                </strong>
-
-                <div className="muted tiny" style={{ marginTop: 4 }}>
-                  {item.transportType} • Budget ₱{item.budgetAmount}
-                </div>
-
-                <div className="muted tiny" style={{ marginTop: 4 }}>
-                  {item.tripCount} trips • saved ₱{item.perTripSaved}/trip
-                </div>
-
-                <div className="muted tiny" style={{ marginTop: 4 }}>
-                  Date: {item.date}
-                </div>
-              </div>
-
-              <div style={{ display: "flex", alignItems: "center" }}>
+            <div key={item.id} className="history-row">
+              <span>
+                <strong>{item.to}</strong>
+                <small>{item.from}</small>
+              </span>
+              <span>{item.date}</span>
+              <span>PHP {item.actualSpent || item.estimatedSpent || 0}</span>
+              <span>{item.tripCount}</span>
+              <span>{item.transportType}</span>
+              <span>
                 <button
-                  className="ghost-btn"
+                  className="ghost-btn compact"
                   type="button"
                   onClick={() => onUseAgain(item)}
                 >
-                  Use Again
+                  View
                 </button>
-              </div>
+              </span>
             </div>
           ))}
         </div>

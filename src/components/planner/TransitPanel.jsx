@@ -7,6 +7,19 @@ const TAB_LABELS = {
   direct: "Direct Route",
 };
 
+function getRideLabel(ride) {
+  const mode = ride.mode || ride.route?.type || "Ride";
+  const code = ride.route?.code ? ` ${ride.route.code}` : "";
+  return `${mode}${code}`;
+}
+
+function formatEta(minutes) {
+  return new Intl.DateTimeFormat("en-PH", {
+    hour: "numeric",
+    minute: "2-digit",
+  }).format(new Date(Date.now() + minutes * 60000));
+}
+
 export default function TransitPanel({
   transit,
   selectedRouteTab,
@@ -19,9 +32,10 @@ export default function TransitPanel({
 }) {
   if (!transit) {
     return (
-      <div className="card glossy-card">
-        <h3 className="section-title">Recommended Ride</h3>
-        <p className="muted">Generate a ride first to see the best transport suggestion.</p>
+      <div className="card panel-card recommendations-card">
+        <div className="panel-kicker">Recommended Rides</div>
+        <h3 className="section-title">Top options for your trip</h3>
+        <p className="muted">Enter your origin, destination, and daily budget to get a one-way jeep or bus recommendation.</p>
       </div>
     );
   }
@@ -32,110 +46,97 @@ export default function TransitPanel({
       : transit.availableTabs?.[0] || null;
 
   const activeOption = activeTab ? transit.routeOptions?.[activeTab] : null;
+  const dailyBudget = Math.max(0, Number(budgetAmount) || 0);
+  const eta = activeOption ? formatEta(activeOption.estimatedDuration) : "-";
 
   return (
-    <div className="card glossy-card">
-      <h3 className="section-title">Recommended Ride</h3>
+    <div className="card panel-card recommendations-card">
+      <div className="panel-kicker">Recommended Rides</div>
+      <h3 className="section-title">Top options for your trip</h3>
 
-      <div className="summary-grid" style={{ marginBottom: 14 }}>
+      <div className="route-choice-list">
+        {transit.availableTabs?.map((tab) => {
+          const option = transit.routeOptions?.[tab];
+          if (!option) return null;
+
+          return (
+            <button
+              key={tab}
+              type="button"
+              className={`route-choice ${activeTab === tab ? "active" : ""}`}
+              onClick={() => onSelectRouteTab(tab)}
+            >
+              <span>{TAB_LABELS[tab]}</span>
+              <div className="ride-icons">{option.rides.map(getRideLabel).join(" + ")}</div>
+              <div className="ride-metrics">
+                <small>Est. Fare <strong>PHP {option.estimatedCostPerDay}</strong></small>
+                <small>Est. Time <strong>{option.estimatedDuration}m</strong></small>
+                <small>ETA <strong>{formatEta(option.estimatedDuration)}</strong></small>
+                <small>Transfers <strong>{Math.max(option.rides.length - 1, 0)}</strong></small>
+              </div>
+              <em>View Route</em>
+            </button>
+          );
+        })}
+      </div>
+
+      <div className="summary-grid compact-summary recommendation-summary">
         <div className="summary-block">
           <span>Origin</span>
-          <strong>{originText || "—"}</strong>
+          <strong>{originText || "-"}</strong>
         </div>
         <div className="summary-block">
           <span>Destination</span>
-          <strong>{destinationText || "—"}</strong>
+          <strong>{destinationText || "-"}</strong>
         </div>
         <div className="summary-block">
           <span>Daily Budget</span>
-          <strong>₱{budgetAmount || 0}</strong>
+          <strong>PHP {dailyBudget}</strong>
         </div>
         <div className="summary-block">
-          <span>Trips</span>
-          <strong>{tripCount || 0}</strong>
+          <span>Trip</span>
+          <strong>One-way</strong>
+        </div>
+        <div className="summary-block">
+          <span>ETA</span>
+          <strong>{eta}</strong>
         </div>
       </div>
 
-      <p className="kv">
-        <strong>Suggested Transport:</strong> {transit.recommendation}
-      </p>
-      <p className="kv">
-        <strong>Why:</strong> {transit.reason}
-      </p>
-      <div className="kv">
-        <strong>Hero Moves Used:</strong>{" "}
-        {selectedMoves?.length ? selectedMoves.join(", ") : "None selected"}
+      <div className="route-note">
+        <strong>{transit.recommendation}</strong>
+        <span>{transit.reason}</span>
       </div>
-
-      {transit.availableTabs?.length > 0 && (
-        <>
-          <h4 className="mini-title">Route Options</h4>
-          <div className="trip-direction-row" style={{ marginBottom: 12, flexWrap: "wrap" }}>
-            {transit.availableTabs.map((tab) => (
-              <button
-                key={tab}
-                type="button"
-                className={`weekday-chip ${activeTab === tab ? "active" : ""}`}
-                onClick={() => onSelectRouteTab(tab)}
-              >
-                {TAB_LABELS[tab]}
-              </button>
-            ))}
-          </div>
-        </>
-      )}
 
       {activeOption ? (
         <>
-          <div className="summary-grid" style={{ marginBottom: 14 }}>
-            <div className="summary-block">
-              <span>Selected</span>
-              <strong>{TAB_LABELS[activeTab]}</strong>
-            </div>
-            <div className="summary-block">
-              <span>Estimated Cost per Day</span>
-              <strong>₱{activeOption.estimatedCostPerDay}</strong>
-            </div>
-            <div className="summary-block">
-              <span>Estimated Time</span>
-              <strong>{activeOption.estimatedDuration} mins</strong>
-            </div>
-            <div className="summary-block">
-              <span>Rides</span>
-              <strong>{activeOption.rides.length}</strong>
-            </div>
-          </div>
-
           <h4 className="mini-title">How to Commute</h4>
-          <ul className="route-list">
+          <ol className="route-list ordered">
             {activeOption.rideGuide?.map((step, index) => (
               <li key={`guide-${index}`}>
                 <span>{step}</span>
               </li>
             ))}
-          </ul>
+          </ol>
 
-          <h4 className="mini-title">Alternative Routes</h4>
-          <ul className="route-list">
-            {transit.routes
-              ?.filter((route) => route.id !== activeOption.id)
-              .map((route) => (
-                <li key={route.id}>
-                  <div>
-                    <strong>{route.type}: {route.code}</strong>
-                    <span>{route.name}</span>
-                    <span>Estimated Cost per Day: ₱{route.estimatedCostPerDay}</span>
-                    <span>Estimated Time: {route.estimatedDuration} mins</span>
-                  </div>
-                </li>
-              ))}
-          </ul>
+          <h4 className="mini-title">Travel Notes</h4>
+          <div className="note-stack">
+            {activeOption.rides?.map((ride, index) => (
+              <span key={`ride-stop-${index}`}>
+                Board {getRideLabel(ride)} at {ride.boardAt}; get off at {ride.alightAt}.
+              </span>
+            ))}
+            <span>
+              Transfers: {Math.max((activeOption.rides?.length || 1) - 1, 0)}
+            </span>
+            {selectedMoves?.length ? <span>Moves: {selectedMoves.join(", ")}</span> : null}
+          </div>
 
           <h4 className="mini-title">Terminal Guide</h4>
           <TerminalList terminals={activeOption.terminals || []} />
         </>
       ) : (
-        <p className="muted">No route option available.</p>
+        <p className="muted">No jeep or bus recommendation available yet.</p>
       )}
     </div>
   );

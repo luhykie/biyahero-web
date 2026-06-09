@@ -245,9 +245,9 @@ function buildRideGuide(option) {
 
   const lines = [];
   option.rides.forEach((ride, index) => {
-    lines.push(
-      `Ride PUJ ${ride.route.code} (${ride.route.name}) from ${ride.boardAt} to ${ride.alightAt}.`
-    );
+    const mode = ride.mode || ride.route.type || "Ride";
+    const code = ride.route.code ? ` ${ride.route.code}` : "";
+    lines.push(`Ride ${mode}${code} (${ride.route.name}) from ${ride.boardAt} to ${ride.alightAt}.`);
     if (index < option.rides.length - 1) {
       lines.push(`Transfer at ${ride.alightAt}.`);
     }
@@ -318,6 +318,146 @@ function getOptionTerminals(option) {
   );
 }
 
+function getTerminalByArea(area) {
+  return terminals.find((terminal) => includesArea(terminal.area, area));
+}
+
+function getIntercityBusDestination(destinationText) {
+  const destination = normalize(destinationText);
+
+  if (destination.includes("oslob")) {
+    return {
+      id: "oslob-southbound-bus",
+      name: "Oslob",
+      terminalArea: "South Bus Terminal",
+      terminalName: "South Bus Terminal Area",
+      code: "Southbound Bus",
+      routeName: "South Bus Terminal - Oslob",
+      fare: 250,
+      duration: 210,
+      direction: "Bato via Oslob",
+    };
+  }
+
+  if (destination.includes("moalboal")) {
+    return {
+      id: "moalboal-southbound-bus",
+      name: "Moalboal",
+      terminalArea: "South Bus Terminal",
+      terminalName: "South Bus Terminal Area",
+      code: "Southbound Bus",
+      routeName: "South Bus Terminal - Moalboal",
+      fare: 220,
+      duration: 180,
+      direction: "Bato via Barili",
+    };
+  }
+
+  if (destination.includes("kawasan") || destination.includes("badian")) {
+    return {
+      id: "badian-southbound-bus",
+      name: "Badian",
+      terminalArea: "South Bus Terminal",
+      terminalName: "South Bus Terminal Area",
+      code: "Southbound Bus",
+      routeName: "South Bus Terminal - Badian",
+      fare: 230,
+      duration: 190,
+      direction: "Bato via Barili",
+    };
+  }
+
+  if (destination.includes("simala") || destination.includes("sibonga")) {
+    return {
+      id: "simala-southbound-bus",
+      name: "Simala Shrine",
+      terminalArea: "South Bus Terminal",
+      terminalName: "South Bus Terminal Area",
+      code: "Southbound Bus",
+      routeName: "South Bus Terminal - Sibonga/Simala",
+      fare: 120,
+      duration: 95,
+      direction: "Sibonga",
+    };
+  }
+
+  if (destination.includes("carcar")) {
+    return {
+      id: "carcar-southbound-bus",
+      name: "Carcar",
+      terminalArea: "South Bus Terminal",
+      terminalName: "South Bus Terminal Area",
+      code: "Southbound Bus",
+      routeName: "South Bus Terminal - Carcar",
+      fare: 100,
+      duration: 80,
+      direction: "Carcar",
+    };
+  }
+
+  return null;
+}
+
+function buildIntercityBusOption(originText, destinationText, origin, destination, tripsPerDay) {
+  const busDestination = getIntercityBusDestination(destinationText);
+  if (!busDestination) return null;
+
+  const terminal = getTerminalByArea(busDestination.terminalArea);
+  const connectorFare = 15;
+  const connectorDuration = 15;
+
+  return {
+    type: "bus-transfer",
+    id: busDestination.id,
+    estimatedCostPerDay: Math.round((connectorFare + busDestination.fare) * tripsPerDay * 100) / 100,
+    estimatedDuration: connectorDuration + busDestination.duration,
+    score: 1,
+    rides: [
+      {
+        mode: "Jeep/Walk",
+        route: {
+          code: "Connector",
+          name: `Go to ${busDestination.terminalName}`,
+          path: ["Origin", busDestination.terminalArea],
+          type: "Jeep/Walk",
+        },
+        boardAt: originText || "Your origin",
+        alightAt: busDestination.terminalName,
+      },
+      {
+        mode: "Bus",
+        route: {
+          code: busDestination.code,
+          name: `${busDestination.routeName} (${busDestination.direction})`,
+          path: [busDestination.terminalArea, busDestination.name],
+          type: "Bus",
+        },
+        boardAt: busDestination.terminalName,
+        alightAt: destinationText || busDestination.name,
+      },
+    ],
+    landmarks: [
+      ...(terminal
+        ? [{
+            id: `terminal-${terminal.id}`,
+            name: terminal.name,
+            lat: terminal.lat,
+            lon: terminal.lon,
+          }]
+        : []),
+      ...(destination && Number.isFinite(destination.lat) && Number.isFinite(destination.lon)
+        ? [{
+            id: busDestination.id,
+            name: destinationText || busDestination.name,
+            lat: destination.lat,
+            lon: destination.lon,
+          }]
+        : []),
+    ],
+    terminals: terminal ? [terminal] : [],
+  };
+}
+
 function toDisplayRoute(option) {
   return {
     id: option.id,
@@ -370,6 +510,21 @@ export function getTransitRecommendation(
       };
     })
     .sort((a, b) => b.score - a.score);
+
+  if (allOptions.length === 0) {
+    const busOption = buildIntercityBusOption(
+      originText,
+      destinationText,
+      origin,
+      destination,
+      tripsPerDay
+    );
+
+    if (busOption) {
+      busOption.rideGuide = buildRideGuide(busOption);
+      allOptions = [busOption];
+    }
+  }
 
   const bestRoute = allOptions[0] || null;
   const cheapestRoute =
@@ -427,10 +582,12 @@ export function getTransitRecommendation(
   );
 
   return {
-    recommendation: "PUJ",
+    recommendation: primaryRoute?.rides?.some((ride) => ride.mode === "Bus")
+      ? "Jeep/Walk + Bus"
+      : "PUJ",
     reason: primaryRoute
-      ? "Showing budget-friendly, cheapest, fastest, and direct PUJ options."
-      : "No PUJ route found for this trip.",
+      ? "Showing where to ride and the recommended jeep/bus route for this trip."
+      : "No jeep or bus route found for this trip.",
     routes,
     routeOptions,
     availableTabs,
