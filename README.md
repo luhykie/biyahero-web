@@ -1,12 +1,8 @@
-# BiyaHero Web
+# React + Vite
 
-A React + Vite travel planning prototype for commuters and visitors in Cebu.
+This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
 
-## What it does
-
-BiyaHero helps first-time travelers plan smarter routes using public transport, terminals, landmarks, and estimated commute details.
-
-Core features:
+Currently, two official plugins are available:
 
 - Responsive route planning and commute recommendations.
 - Budget-aware ride suggestions.
