@@ -26,10 +26,17 @@ export default function TransitPanel({
   onSelectRouteTab,
   originText,
   destinationText,
+  stopoverText,
+  fareDiscountType,
   budgetAmount,
   tripCount,
   selectedMoves,
 }) {
+  const money = new Intl.NumberFormat("en-PH", {
+    minimumFractionDigits: 2,
+    maximumFractionDigits: 2,
+  });
+
   if (!transit) {
     return (
       <div className="card panel-card recommendations-card">
@@ -48,6 +55,12 @@ export default function TransitPanel({
   const activeOption = activeTab ? transit.routeOptions?.[activeTab] : null;
   const dailyBudget = Math.max(0, Number(budgetAmount) || 0);
   const eta = activeOption ? formatEta(activeOption.estimatedDuration) : "-";
+  const jeepneyRoutes = transit.possibleJeepneys || [];
+  const busRoutes = transit.possibleBusRoutes || [];
+  const fareNote =
+    fareDiscountType && fareDiscountType !== "regular"
+      ? `${fareDiscountType[0].toUpperCase()}${fareDiscountType.slice(1)} discount applied`
+      : "Regular fare";
 
   return (
     <div className="card panel-card recommendations-card">
@@ -69,7 +82,7 @@ export default function TransitPanel({
               <span>{TAB_LABELS[tab]}</span>
               <div className="ride-icons">{option.rides.map(getRideLabel).join(" + ")}</div>
               <div className="ride-metrics">
-                <small>Est. Fare <strong>PHP {option.estimatedCostPerDay}</strong></small>
+                <small>Est. Fare <strong>PHP {money.format(option.estimatedCostPerDay)}</strong></small>
                 <small>Est. Time <strong>{option.estimatedDuration}m</strong></small>
                 <small>ETA <strong>{formatEta(option.estimatedDuration)}</strong></small>
                 <small>Transfers <strong>{Math.max(option.rides.length - 1, 0)}</strong></small>
@@ -89,9 +102,15 @@ export default function TransitPanel({
           <span>Destination</span>
           <strong>{destinationText || "-"}</strong>
         </div>
+        {stopoverText ? (
+          <div className="summary-block">
+            <span>Stop Over</span>
+            <strong>{stopoverText}</strong>
+          </div>
+        ) : null}
         <div className="summary-block">
           <span>Daily Budget</span>
-          <strong>PHP {dailyBudget}</strong>
+          <strong>PHP {money.format(dailyBudget)}</strong>
         </div>
         <div className="summary-block">
           <span>Trip</span>
@@ -105,8 +124,44 @@ export default function TransitPanel({
 
       <div className="route-note">
         <strong>{transit.recommendation}</strong>
-        <span>{transit.reason}</span>
+        <span>
+          {stopoverText
+            ? `${transit.reason} Your map route includes a stopover at ${stopoverText}.`
+            : transit.reason}
+        </span>
       </div>
+
+      <h4 className="mini-title">Possible Jeepney Numbers</h4>
+      {jeepneyRoutes.length ? (
+        <div className="route-chip-row">
+          {jeepneyRoutes.map((route) => (
+            <span key={route.code} className="route-chip">
+              <strong>{route.code}</strong>
+              <small>{route.name}</small>
+              <small>
+                Fare PHP {money.format(route.discountedFare || route.fare || 0)}
+              </small>
+            </span>
+          ))}
+        </div>
+      ) : (
+        <p className="muted">No jeepney route code found for this trip yet.</p>
+      )}
+
+      <h4 className="mini-title">Possible Bus Routes</h4>
+      {busRoutes.length ? (
+        <div className="route-chip-row">
+          {busRoutes.map((route) => (
+            <span key={route.code} className="route-chip bus">
+              <strong>{route.code}</strong>
+              <small>{route.name}</small>
+              <small>Fare PHP {money.format(route.discountedFare || route.fare || 0)}</small>
+            </span>
+          ))}
+        </div>
+      ) : (
+        <p className="muted">No bus route matches this trip yet.</p>
+      )}
 
       {activeOption ? (
         <>
@@ -129,7 +184,9 @@ export default function TransitPanel({
             <span>
               Transfers: {Math.max((activeOption.rides?.length || 1) - 1, 0)}
             </span>
+            {stopoverText ? <span>Stopover: {stopoverText}</span> : null}
             {selectedMoves?.length ? <span>Moves: {selectedMoves.join(", ")}</span> : null}
+            <span>Fare: {fareNote}</span>
           </div>
 
           <h4 className="mini-title">Terminal Guide</h4>

@@ -5,6 +5,7 @@ export default function LocationAutocompleteInput({
   value,
   setValue,
   onSelect,
+  onValueChange,
   placeholder,
 }) {
   const [suggestions, setSuggestions] = useState([]);
@@ -31,7 +32,11 @@ export default function LocationAutocompleteInput({
       <input
         className="input"
         value={value}
-        onChange={(e) => setValue(e.target.value)}
+        onChange={(e) => {
+          const nextValue = e.target.value;
+          setValue(nextValue);
+          onValueChange?.(nextValue);
+        }}
         placeholder={placeholder}
         onBlur={() => {
           setTimeout(() => setSuggestions([]), 180);

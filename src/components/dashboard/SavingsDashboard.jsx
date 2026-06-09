@@ -7,6 +7,10 @@ export default function SavingsDashboard({
   tripsThisMonth,
   daysWithTrips,
 }) {
+  const money = new Intl.NumberFormat("en-PH", {
+    minimumFractionDigits: 2,
+    maximumFractionDigits: 2,
+  });
   const budget = Math.max(0, Number(budgetAmount) || 0);
   const projectedSpend = Math.max(0, savings?.projectedSpend || 0);
   const budgetDiff = budget ? Math.max(budget - projectedSpend, 0) : 0;
@@ -17,21 +21,21 @@ export default function SavingsDashboard({
       <div className="stat-card orange">
         <i><img src="/assets/icons/daily-budget.svg" alt="" /></i>
         <span>Daily Budget</span>
-        <strong>PHP {budget || 0}</strong>
+        <strong>PHP {money.format(budget || 0)}</strong>
         <small>Set for today</small>
       </div>
 
       <div className="stat-card blue">
         <i><img src="/assets/icons/route-summary.svg" alt="" /></i>
         <span>Estimated Cost</span>
-        <strong>PHP {projectedSpend}</strong>
+        <strong>PHP {money.format(projectedSpend)}</strong>
         <small>For current trip</small>
       </div>
 
       <div className="stat-card green">
         <i><img src="/assets/icons/daily-budget.svg" alt="" /></i>
         <span>Budget Left</span>
-        <strong>PHP {budgetDiff}</strong>
+        <strong>PHP {money.format(budgetDiff)}</strong>
         <small>Remaining today</small>
       </div>
 

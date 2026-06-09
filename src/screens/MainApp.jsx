@@ -40,6 +40,13 @@ const MOBILE_MORE_ITEMS = [
 ];
 
 const ACTIVE_VIEW_KEY = "biyahero_active_view";
+const FARE_DISCOUNT_KEY = "biyahero_fare_discount";
+const FARE_DISCOUNT_OPTIONS = [
+  { value: "regular", label: "Regular" },
+  { value: "student", label: "Student" },
+  { value: "senior", label: "Senior Citizen" },
+  { value: "pwd", label: "PWD" },
+];
 
 const DESTINATIONS = [
   {
@@ -201,6 +208,18 @@ function getStoredActiveView() {
   }
 }
 
+function getStoredFareDiscountType() {
+  try {
+    return localStorage.getItem(FARE_DISCOUNT_KEY) || "regular";
+  } catch {
+    return "regular";
+  }
+}
+
+function getFareDiscountRate(discountType) {
+  return discountType === "regular" ? 0 : 0.2;
+}
+
 function getHeatIndexC(temperatureC, humidity) {
   const temperatureF = temperatureC * 1.8 + 32;
   const heatIndexF =
@@ -232,11 +251,53 @@ function formatHeaderTime(date) {
   }).format(date);
 }
 
+function applyStopoverMetrics(transitData, routeData, fallbackFare) {
+  if (!routeData?.stopover || !transitData) return transitData;
+
+  const minimumFare = Math.round(Math.max(0, Number(fallbackFare) || 0) * 100) / 100;
+  const minimumDuration = Math.max(0, Number(routeData.durationMin) || 0);
+  const adjustOption = (option) => {
+    if (!option) return option;
+
+    return {
+      ...option,
+      estimatedCostPerDay: Math.max(
+        Number(option.estimatedCostPerDay) || 0,
+        minimumFare
+      ),
+      estimatedDuration: Math.max(
+        Number(option.estimatedDuration) || 0,
+        minimumDuration
+      ),
+    };
+  };
+
+  const routeOptions = Object.fromEntries(
+    Object.entries(transitData.routeOptions || {}).map(([key, option]) => [
+      key,
+      adjustOption(option),
+    ])
+  );
+
+  const primaryKey = transitData.availableTabs?.[0];
+
+  return {
+    ...transitData,
+    routeOptions,
+    primaryRoute: primaryKey
+      ? routeOptions[primaryKey]
+      : adjustOption(transitData.primaryRoute),
+    reason: `${transitData.reason} Stopover distance, time, and fare are included in the totals.`,
+  };
+}
+
 export default function MainApp({ user, onLogout }) {
   const [originText, setOriginText] = useState("");
   const [destinationText, setDestinationText] = useState("");
+  const [stopoverText, setStopoverText] = useState("");
   const [origin, setOrigin] = useState(null);
   const [destination, setDestination] = useState(null);
+  const [stopover, setStopover] = useState(null);
 
   const [calendarMonth, setCalendarMonth] = useState(() =>
     new Date().toISOString().slice(0, 7)
@@ -260,8 +321,10 @@ export default function MainApp({ user, onLogout }) {
   const [favoriteDestinations, setFavoriteDestinations] = useState([]);
   const [currentNow, setCurrentNow] = useState(() => new Date());
   const [showMobileMore, setShowMobileMore] = useState(false);
+  const [fareDiscountType, setFareDiscountType] = useState(getStoredFareDiscountType);
 
   const budgetPeriod = "daily";
+  const fareDiscountRate = getFareDiscountRate(fareDiscountType);
 
   const heatIndex = getHeatIndexC(WEATHER.temperatureC, WEATHER.humidity);
   const effectiveTripCount = 1;
@@ -297,6 +360,10 @@ export default function MainApp({ user, onLogout }) {
     localStorage.setItem(ACTIVE_VIEW_KEY, activeView);
   }, [activeView]);
 
+  useEffect(() => {
+    localStorage.setItem(FARE_DISCOUNT_KEY, fareDiscountType);
+  }, [fareDiscountType]);
+
   const profileName = user?.name?.trim() || "Juan Dela Cruz";
   const profileEmail = user?.email?.trim() || "Traveler";
   const visibleDestinations = DESTINATIONS.slice(0, 6);
@@ -314,8 +381,11 @@ export default function MainApp({ user, onLogout }) {
   const handleUseAgain = (item) => {
     setOriginText(item.from || "");
     setDestinationText(item.to || "");
+    setStopoverText(item.stopoverText || "");
     setOrigin(item.origin || null);
     setDestination(item.destination || null);
+    setStopover(item.stopover || null);
+    setFareDiscountType(item.fareDiscountType || "regular");
 
     setBudgetAmount(item.budgetAmount ? String(Math.max(0, Number(item.budgetAmount) || 0)) : "");
     setSelectedMoves(item.selectedMoves || []);
@@ -362,10 +432,15 @@ export default function MainApp({ user, onLogout }) {
       return;
     }
 
+    if (stopoverText.trim() && !stopover) {
+      alert("Please select a stopover from the suggestions, or clear the stopover field.");
+      return;
+    }
+
     try {
       setLoading(true);
 
-      const data = await getRoute(origin, destination);
+      const data = await getRoute(origin, destination, stopover);
       setRoute(data.coordinates);
       setRouteInfo(data);
 
@@ -378,6 +453,7 @@ export default function MainApp({ user, onLogout }) {
         selectedMoves,
         tripsPerDay: 1,
         commuteDayCount: 1,
+        fareDiscountRate,
       });
 
       setCurrentStress(
@@ -394,14 +470,16 @@ export default function MainApp({ user, onLogout }) {
         })
       );
 
-      const transitData = getTransitRecommendation(
+      const transitData = applyStopoverMetrics(getTransitRecommendation(
         originText,
         destinationText,
         selectedMoves,
         origin,
         destination,
-        1
-      );
+        1,
+        fareDiscountRate,
+        stopoverText
+      ), data, computedSavings.betterCost);
 
       const recommendedCost = transitData.primaryRoute?.estimatedCostPerDay;
       const displaySavings = Number.isFinite(recommendedCost)
@@ -423,8 +501,10 @@ export default function MainApp({ user, onLogout }) {
         date: new Date().toISOString().slice(0, 10),
         from: originText,
         to: destinationText,
+        stopoverText,
         origin,
         destination,
+        stopover,
         budgetPeriod,
         budgetAmount: Number(budgetAmount),
         tripCount: effectiveTripCount,
@@ -433,6 +513,7 @@ export default function MainApp({ user, onLogout }) {
         selectedCommuteDays,
         tripsPerDay: 1,
         selectedMoves,
+        fareDiscountType,
         estimatedSpent: displaySavings.projectedSpend,
         actualSpent: displaySavings.betterCost,
         perTripSaved: displaySavings.perTrip,
@@ -483,6 +564,10 @@ export default function MainApp({ user, onLogout }) {
       <div className="legend-row">
         <span className="legend-marker legend-origin">O</span>
         <span>Origin</span>
+      </div>
+      <div className="legend-row">
+        <span className="legend-marker legend-stopover">S</span>
+        <span>Stopover</span>
       </div>
       <div className="legend-row">
         <span className="legend-marker legend-destination">D</span>
@@ -670,6 +755,23 @@ export default function MainApp({ user, onLogout }) {
               <input type="checkbox" /> Prioritize fastest route
             </label>
           </div>
+          <div className="settings-fare">
+            <label className="field-label">Fare category</label>
+            <select
+              className="input"
+              value={fareDiscountType}
+              onChange={(e) => setFareDiscountType(e.target.value)}
+            >
+              {FARE_DISCOUNT_OPTIONS.map((option) => (
+                <option key={option.value} value={option.value}>
+                  {option.label}
+                </option>
+              ))}
+            </select>
+            <small className="input-help">
+              Applies the 20% concession to jeepney and bus fares when available.
+            </small>
+          </div>
         </section>
       );
     }
@@ -783,6 +885,18 @@ export default function MainApp({ user, onLogout }) {
                 placeholder="Oslob, Cebu"
               />
 
+              <label className="field-label">Stop Over (Optional)</label>
+              <LocationAutocompleteInput
+                value={stopoverText}
+                setValue={setStopoverText}
+                onSelect={setStopover}
+                onValueChange={() => setStopover(null)}
+                placeholder="South Bus Terminal, SM City Cebu"
+              />
+              <small className="input-help">
+                Add one place to pause, eat, or change rides along the way.
+              </small>
+
               <div>
                 <label className="field-label">Daily Budget</label>
                 <input
@@ -820,6 +934,8 @@ export default function MainApp({ user, onLogout }) {
               onSelectRouteTab={setSelectedRouteTab}
               originText={originText}
               destinationText={destinationText}
+              stopoverText={stopoverText}
+              fareDiscountType={fareDiscountType}
               budgetAmount={budgetAmount}
               tripCount={effectiveTripCount}
               selectedMoves={selectedMoves}
@@ -836,13 +952,16 @@ export default function MainApp({ user, onLogout }) {
                 routeInfo={routeInfo}
                 savings={savings}
                 currentStress={currentStress}
-                betterStress={betterStress}
-                transit={transit}
-                selectedRouteTab={selectedRouteTab}
-              />
+              betterStress={betterStress}
+              transit={transit}
+              selectedRouteTab={selectedRouteTab}
+              stopoverText={stopoverText}
+              fareDiscountType={fareDiscountType}
+            />
               <MapView
                 origin={origin}
                 destination={destination}
+                stopover={routeInfo?.stopover}
                 route={route}
                 terminals={transit?.routeOptions?.[selectedRouteTab]?.terminals || []}
                 landmarks={transit?.routeOptions?.[selectedRouteTab]?.landmarks || landmarks}
@@ -852,14 +971,16 @@ export default function MainApp({ user, onLogout }) {
 
             <div className="right-column">
               <TransitPanel
-                transit={transit}
-                selectedRouteTab={selectedRouteTab}
-                onSelectRouteTab={setSelectedRouteTab}
-                originText={originText}
-                destinationText={destinationText}
-                budgetAmount={budgetAmount}
-                tripCount={effectiveTripCount}
-                selectedMoves={selectedMoves}
+              transit={transit}
+              selectedRouteTab={selectedRouteTab}
+              onSelectRouteTab={setSelectedRouteTab}
+              originText={originText}
+              destinationText={destinationText}
+              stopoverText={stopoverText}
+              fareDiscountType={fareDiscountType}
+              budgetAmount={budgetAmount}
+              tripCount={effectiveTripCount}
+              selectedMoves={selectedMoves}
               />
             </div>
           </section>

@@ -1080,6 +1080,12 @@ button {
   margin: 0;
 }
 
+.settings-fare {
+  margin-top: 14px;
+  display: grid;
+  gap: 8px;
+}
+
 .legend-box {
   display: grid;
   gap: 11px;
@@ -1111,6 +1117,7 @@ button {
 }
 
 .legend-origin { background: var(--primary-2); }
+.legend-stopover { background: #8b5cf6; }
 .legend-destination { background: var(--red); }
 .legend-terminal { background: var(--orange); }
 .legend-waiting { background: #0ea5e9; }
@@ -1126,6 +1133,37 @@ button {
 .legend-line.green { background: var(--green); }
 .legend-line.dashed-purple {
   background: repeating-linear-gradient(90deg, #8058e8 0 8px, transparent 8px 12px);
+}
+
+.route-chip-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-bottom: 8px;
+}
+
+.route-chip {
+  display: grid;
+  gap: 2px;
+  min-width: 138px;
+  padding: 10px 12px;
+  border: 1px solid #dfe6f1;
+  border-radius: 12px;
+  background: #fffdf8;
+}
+
+.route-chip strong {
+  color: var(--primary);
+  font-size: 13px;
+}
+
+.route-chip small {
+  color: var(--muted);
+  font-size: 11px;
+}
+
+.route-chip.bus strong {
+  color: var(--orange);
 }
 
 .route-choice-list {
@@ -1449,6 +1487,7 @@ button {
 }
 
 .map-pin-origin { background: var(--primary-2); }
+.map-pin-stopover { background: #8b5cf6; }
 .map-pin-destination { background: var(--red); }
 .map-pin-terminal { background: var(--orange); }
 .map-pin-landmark { background: var(--green); }

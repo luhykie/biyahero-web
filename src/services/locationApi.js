@@ -34,9 +34,28 @@ function buildLocalSuggestions(query) {
   return [...landmarkSuggestions, ...terminalSuggestions];
 }
 
+function scoreSuggestion(item, query) {
+  const normalizedQuery = normalize(query);
+  const normalizedName = normalize(item.name);
+  const normalizedArea = normalize(item.area);
+
+  let score = 0;
+  if (normalizedName === normalizedQuery) score += 100;
+  if (normalizedName.startsWith(normalizedQuery)) score += 60;
+  if (normalizedName.includes(normalizedQuery)) score += 35;
+  if (normalizedArea.includes(normalizedQuery)) score += 15;
+  if (item.id?.startsWith("terminal-")) score += 8;
+  if (item.id?.startsWith("landmark-")) score += 4;
+  return score;
+}
+
 export async function searchPlaces(query) {
   if (!query || query.trim().length < 2) return [];
-  const localSuggestions = buildLocalSuggestions(query).slice(0, 5);
+  const localSuggestions = buildLocalSuggestions(query)
+    .map((item) => ({ ...item, score: scoreSuggestion(item, query) }))
+    .sort((a, b) => b.score - a.score)
+    .slice(0, 5)
+    .map(({ score, ...item }) => item);
 
   const url =
     `https://nominatim.openstreetmap.org/search?` +
@@ -53,12 +72,16 @@ export async function searchPlaces(query) {
     if (!res.ok) return localSuggestions;
 
     const data = await res.json();
-    const remoteSuggestions = data.map((item) => ({
-      id: `osm-${item.place_id}`,
-      name: item.display_name,
-      lat: parseFloat(item.lat),
-      lon: parseFloat(item.lon),
-    }));
+    const remoteSuggestions = data
+      .map((item) => ({
+        id: `osm-${item.place_id}`,
+        name: item.display_name,
+        lat: parseFloat(item.lat),
+        lon: parseFloat(item.lon),
+      }))
+      .map((item) => ({ ...item, score: scoreSuggestion(item, query) }))
+      .sort((a, b) => b.score - a.score)
+      .map(({ score, ...item }) => item);
 
     const merged = [...localSuggestions, ...remoteSuggestions];
     const seenNames = new Set();

@@ -4,6 +4,11 @@ export default function TripHistoryPage({
   onClear,
   onUseAgain,
 }) {
+  const money = new Intl.NumberFormat("en-PH", {
+    minimumFractionDigits: 2,
+    maximumFractionDigits: 2,
+  });
+
   return (
     <section className="card panel-card history-page">
       <div className="panel-head">
@@ -40,9 +45,10 @@ export default function TripHistoryPage({
               <span>
                 <strong>{item.to}</strong>
                 <small>{item.from}</small>
+                {item.stopoverText ? <small>via {item.stopoverText}</small> : null}
               </span>
               <span>{item.date}</span>
-              <span>PHP {item.actualSpent || item.estimatedSpent || 0}</span>
+              <span>PHP {money.format(item.actualSpent || item.estimatedSpent || 0)}</span>
               <span>{item.tripCount}</span>
               <span>{item.transportType}</span>
               <span>

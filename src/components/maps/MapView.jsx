@@ -18,6 +18,14 @@ const destinationIcon = L.divIcon({
   popupAnchor: [0, -24],
 });
 
+const stopoverIcon = L.divIcon({
+  className: "map-pin map-pin-stopover",
+  html: '<span>S</span>',
+  iconSize: [24, 24],
+  iconAnchor: [12, 24],
+  popupAnchor: [0, -24],
+});
+
 const terminalIcon = L.divIcon({
   className: "map-pin map-pin-terminal",
   html: '<span>T</span>',
@@ -53,6 +61,7 @@ function MapBounds({ points }) {
 export default function MapView({
   origin,
   destination,
+  stopover,
   route,
   terminals = [],
   landmarks = [],
@@ -61,6 +70,7 @@ export default function MapView({
   const center = origin ? [origin.lat, origin.lon] : [10.3157, 123.8854];
   const mapPoints = [
     ...(origin ? [[origin.lat, origin.lon]] : []),
+    ...(stopover ? [[stopover.lat, stopover.lon]] : []),
     ...(destination ? [[destination.lat, destination.lon]] : []),
     ...(route || []),
     ...pujRoutePolylines.flatMap((line) => line.positions || []),
@@ -91,6 +101,16 @@ export default function MapView({
         {destination && (
           <Marker position={[destination.lat, destination.lon]} icon={destinationIcon}>
             <Popup>Destination</Popup>
+          </Marker>
+        )}
+
+        {stopover && (
+          <Marker position={[stopover.lat, stopover.lon]} icon={stopoverIcon}>
+            <Popup>
+              <strong>{stopover.name || "Stopover"}</strong>
+              <br />
+              Stopover
+            </Popup>
           </Marker>
         )}
 
@@ -135,6 +155,7 @@ export default function MapView({
           <span><i className="legend-line green" /> Bus Route</span>
           <span><i className="legend-line dashed-purple" /> Transfer / Alternate</span>
           <span><i className="legend-marker legend-origin">O</i> Origin</span>
+          <span><i className="legend-marker legend-stopover">S</i> Stopover</span>
           <span><i className="legend-marker legend-destination">D</i> Destination</span>
           <span><i className="legend-marker legend-terminal">T</i> Terminal</span>
           <span><i className="legend-marker legend-waiting">W</i> Waiting Shed</span>

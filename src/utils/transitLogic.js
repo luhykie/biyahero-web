@@ -45,6 +45,20 @@ function routeTouchesDestination(route, destinationText) {
   return (route.path || []).some((stop) => hasStopMatch(destinationText, stop));
 }
 
+function routeTouchesStopover(route, stopoverText) {
+  return stopoverText
+    ? (route.path || []).some((stop) => hasStopMatch(stopoverText, stop))
+    : false;
+}
+
+function scoreRouteMatch(route, originText, destinationText, stopoverText) {
+  let score = 0;
+  if (routeTouchesOrigin(route, originText)) score += 3;
+  if (routeTouchesDestination(route, destinationText)) score += 3;
+  if (routeTouchesStopover(route, stopoverText)) score += 2;
+  return score;
+}
+
 function getOrderedSharedStops(routeA, routeB) {
   const stopsA = new Set((routeA.path || []).map(normalize));
   return (routeB.path || [])
@@ -197,7 +211,7 @@ function buildOneTransferOptions(routes, originText, destinationText) {
   return options;
 }
 
-function estimateOptionCost(option, selectedMoves, tripsPerDay = 1) {
+function estimateOptionCost(option, selectedMoves, tripsPerDay = 1, fareDiscountRate = 0) {
   const rideCount = option.rides.length;
   const basePerRide = computePujFare(4) * rideCount;
 
@@ -209,6 +223,10 @@ function estimateOptionCost(option, selectedMoves, tripsPerDay = 1) {
 
   if (selectedMoves.includes("walk")) {
     perRide -= 2;
+  }
+
+  if (fareDiscountRate > 0) {
+    perRide = perRide * (1 - fareDiscountRate);
   }
 
   return Math.max(10, Math.round(perRide * tripsPerDay * 100) / 100);
@@ -398,7 +416,14 @@ function getIntercityBusDestination(destinationText) {
   return null;
 }
 
-function buildIntercityBusOption(originText, destinationText, origin, destination, tripsPerDay) {
+function buildIntercityBusOption(
+  originText,
+  destinationText,
+  origin,
+  destination,
+  tripsPerDay,
+  fareDiscountRate = 0
+) {
   const busDestination = getIntercityBusDestination(destinationText);
   if (!busDestination) return null;
 
@@ -406,10 +431,17 @@ function buildIntercityBusOption(originText, destinationText, origin, destinatio
   const connectorFare = 15;
   const connectorDuration = 15;
 
+  const regularCostPerDay = (connectorFare + busDestination.fare) * tripsPerDay;
+  const discountedCostPerDay = fareDiscountRate > 0
+    ? regularCostPerDay * (1 - fareDiscountRate)
+    : regularCostPerDay;
+
   return {
     type: "bus-transfer",
     id: busDestination.id,
-    estimatedCostPerDay: Math.round((connectorFare + busDestination.fare) * tripsPerDay * 100) / 100,
+    estimatedCostPerDay: Math.round(discountedCostPerDay * 100) / 100,
+    regularFarePerDay: Math.round(regularCostPerDay * 100) / 100,
+    discountedFareRate: fareDiscountRate,
     estimatedDuration: connectorDuration + busDestination.duration,
     score: 1,
     rides: [
@@ -478,7 +510,9 @@ export function getTransitRecommendation(
   selectedMoves,
   origin,
   destination,
-  tripsPerDay = 1
+  tripsPerDay = 1,
+  fareDiscountRate = 0,
+  stopoverText = ""
 ) {
   const preparedRoutes = transitRoutes
     .filter((route) => route.type === "PUJ")
@@ -497,7 +531,12 @@ export function getTransitRecommendation(
 
   allOptions = allOptions
     .map((option) => {
-      const estimatedCostPerDay = estimateOptionCost(option, selectedMoves, tripsPerDay);
+      const estimatedCostPerDay = estimateOptionCost(
+        option,
+        selectedMoves,
+        tripsPerDay,
+        fareDiscountRate
+      );
       const estimatedDuration = estimateOptionDuration(option);
       return {
         ...option,
@@ -517,7 +556,8 @@ export function getTransitRecommendation(
       destinationText,
       origin,
       destination,
-      tripsPerDay
+      tripsPerDay,
+      fareDiscountRate
     );
 
     if (busOption) {
@@ -525,6 +565,51 @@ export function getTransitRecommendation(
       allOptions = [busOption];
     }
   }
+
+  const jeepneyCandidates = dedupeByKey(
+    preparedRoutes.filter(
+      (route) =>
+        routeTouchesOrigin(route, originText) ||
+        routeTouchesDestination(route, destinationText) ||
+        routeTouchesStopover(route, stopoverText)
+    ),
+    (route) => route.code
+  )
+    .sort((a, b) =>
+      scoreRouteMatch(b, originText, destinationText, stopoverText) -
+      scoreRouteMatch(a, originText, destinationText, stopoverText)
+    )
+    .slice(0, 6)
+    .map((route) => ({
+      code: route.code,
+      name: route.name,
+      path: route.path || [],
+      fare: Math.round(computePujFare(4) * 100) / 100,
+      discountedFare:
+        fareDiscountRate > 0
+          ? Math.round(computePujFare(4) * (1 - fareDiscountRate) * 100) / 100
+          : Math.round(computePujFare(4) * 100) / 100,
+    }));
+
+  const busDestination = getIntercityBusDestination(destinationText);
+  const busCandidates = busDestination
+    ? [
+        {
+          code: busDestination.code,
+          name: busDestination.routeName,
+          fare:
+            Math.round(
+              (busDestination.fare + 15) * tripsPerDay * 100
+            ) / 100,
+          discountedFare:
+            Math.round(
+              (busDestination.fare + 15) * tripsPerDay * (1 - fareDiscountRate) * 100
+            ) / 100,
+          duration: busDestination.duration + 15,
+          direction: busDestination.direction,
+        },
+      ]
+    : [];
 
   const bestRoute = allOptions[0] || null;
   const cheapestRoute =
@@ -592,6 +677,8 @@ export function getTransitRecommendation(
     routeOptions,
     availableTabs,
     primaryRoute,
+    possibleJeepneys: jeepneyCandidates,
+    possibleBusRoutes: busCandidates,
     terminals: primaryRoute?.terminals || [],
     landmarks: primaryRoute?.landmarks || [],
     pujRoutePolylines: primaryRoute?.pujRoutePolylines || [],

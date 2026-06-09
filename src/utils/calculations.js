@@ -26,6 +26,7 @@ export function calculateSavings({
   tripsPerDay = 1,
   commuteDayCount = 1,
   selectedMoves,
+  fareDiscountRate = 0,
 }) {
   const totalTripsForMonth = Number(tripCount) || 1;
   const dailyBudget = Math.max(0, Number(budgetAmount) || 0);
@@ -48,6 +49,10 @@ export function calculateSavings({
 
   if (selectedMoves.includes("fare_discount")) {
     betterFarePerRide = betterFarePerRide * (1 - DISCOUNT_RATE);
+  }
+
+  if (fareDiscountRate > 0) {
+    betterFarePerRide = betterFarePerRide * (1 - fareDiscountRate);
   }
 
   betterFarePerRide = Math.max(8, round2(betterFarePerRide));
